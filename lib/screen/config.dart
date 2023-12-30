@@ -37,10 +37,12 @@ class _PageState extends State<AppConfig> {
   }
 
   void _updateSettings() async {
-    String? nsec = _nsec.text;
+    String nsec = _nsec.text;
     if ( nsec.isNotEmpty) {
+      print("seve nsec");
       await _encryptManager.saveItem('nsec', nsec);
     } else {
+      print("remove nsec");
       await _encryptManager.deleteItem('nsec');
     }
 

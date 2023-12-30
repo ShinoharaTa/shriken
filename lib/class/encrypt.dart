@@ -7,7 +7,7 @@ class EncryptManager {
 
   EncryptManager._internal()
       : _key = Key.fromUtf8('nostr_util_project_flutter_apps.'),
-        _iv = IV.fromLength(16);
+        _iv = IV.fromUtf8("deadbeer");
 
   static final EncryptManager _instance = EncryptManager._internal();
   factory EncryptManager() {
@@ -28,6 +28,8 @@ class EncryptManager {
     final encryptedData = prefs.getString(itemName);
 
     if (encryptedData != null) {
+      print('Debug: Using Key - ${_key.base64}');
+      print('Debug: Using IV - ${_iv.base64}');
       final encrypter = Encrypter(AES(_key));
       final decrypted =
           encrypter.decrypt(Encrypted.fromBase64(encryptedData), iv: _iv);
