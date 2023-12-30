@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nostr_core_dart/nostr.dart';
 import 'package:shriken/class/connection.dart';
 import 'package:shriken/class/encrypt.dart';
+import 'package:shriken/components/modal.dart';
 
 class PostPage extends StatefulWidget {
   final String? postText;
@@ -30,17 +31,22 @@ class _PostPageState extends State<PostPage> {
 
   void _post() async {
     // TODO: 投稿処理をここに実装
-    String? nsec = await _encryptManager.getItem("nsec");
-    if (nsec != null) {
-      Event event =
-          Nip1.textNote(_textController.text, Nip19.decodePrivkey(nsec) ?? "");
-      Connect.sharedInstance.sendEventRelays(event, [
-        "wss://relay-jp.nostr.wirednet.jp/",
-        "wss://yabu.me/",
-        "wss://r.kojira.io/",
-        "wss://relay-jp.shino3.net/",
-      ]);
-    }
+    await ModalProcess.run("Post status", "completed.", context, () async {
+      String? nsec = await _encryptManager.getItem("nsec");
+      if (nsec != null) {
+        Event event = Nip1.textNote(
+            _textController.text, Nip19.decodePrivkey(nsec) ?? "");
+        Connect.sharedInstance.sendEventRelays(event, [
+          "wss://relay-jp.nostr.wirednet.jp/",
+          "wss://yabu.me/",
+          "wss://r.kojira.io/",
+          "wss://relay-jp.shino3.net/",
+        ]);
+      }
+    }, onComplete: () {
+      // no process
+      _textController.text = "";
+    });
   }
 
   @override

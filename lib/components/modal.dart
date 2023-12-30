@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 class ModalProcess {
-  static Future<void> run(BuildContext context, Future<void> Function() process, {Function? onComplete}) async {
+  static Future<void> run(String modalTitle, String modalContext, BuildContext context, Future<void> Function() process, {Function? onComplete}) async {
     // モーダルを表示
     showDialog(
       context: context,
       barrierDismissible: false, // ユーザーがモーダル外をタップしても閉じない
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('処理中...'),
+          title: Text(modalTitle),
           content: CircularProgressIndicator(),
         );
       },
@@ -31,8 +31,8 @@ class ModalProcess {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('完了'),
-          content: Text('処理が完了しました。'),
+          title: Text(modalTitle),
+          content: Text(modalContext),
         );
       },
     );
