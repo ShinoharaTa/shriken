@@ -301,6 +301,21 @@ class Connect {
     _send(event.serialize(), relay: relay);
   }
 
+  void sendEventRelays(Event event, List<String> relays) async {
+    // print(event.serialize());
+    // Sends sends = Sends(
+    //     generate64RandomHexChars(),
+    //     (relay == null || relay.isEmpty) ? relays() : [relay],
+    //     DateTime.now().millisecondsSinceEpoch,
+    //     event.id,
+    //     sendCallBack);
+    // sendsMap[event.id] = sends;
+    for (var relay in relays) {
+      await connect(relay);
+      _send(event.serialize(), relay: relay);
+    }
+  }
+
   void _send(String data, {String? relay}) {
     if (relay != null) {
       if (webSockets.containsKey(relay)) {
@@ -426,5 +441,30 @@ class Connect {
     _setConnectStatus(relay, 3); // closed
     await Future.delayed(Duration(milliseconds: 3000));
     connect(relay);
+  }
+}
+
+class ConnectionManager {
+  final List<String> relays = [
+    "wss://relay-jp.nostr.wirednet.jp/",
+    "wss://yabu.me/",
+    "wss://r.kojira.io/",
+    "wss://relay-jp.shino3.net/",
+  ];
+
+  int connectedRelays = 0;
+
+  Future<void> connectToRelays() async {
+    // リレーへの接続処理
+    // 例: 各リレーへのWebSocket接続を確立する
+    Connect.sharedInstance.addConnectStatusListener((relay, status) {
+      if (status != 0) {
+        // リレーステータスが未接続から変更されたら更新
+        connectedRelays++;
+      }
+    });
+
+    // step 2 タイムラインを取得する
+    Connect.sharedInstance.connectRelays(relays);
   }
 }

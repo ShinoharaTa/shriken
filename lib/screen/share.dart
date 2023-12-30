@@ -30,11 +30,16 @@ class _PostPageState extends State<PostPage> {
 
   void _post() async {
     // TODO: 投稿処理をここに実装
-    print('投稿された内容: ${_textController.text}');
     String? nsec = await _encryptManager.getItem("nsec");
-    if(nsec != null) {
-      Event event = Nip1.setMetadata(_textController.text, nsec ?? "");
-      Connect.sharedInstance.sendEvent(event);
+    if (nsec != null) {
+      Event event =
+          Nip1.textNote(_textController.text, Nip19.decodePrivkey(nsec) ?? "");
+      Connect.sharedInstance.sendEventRelays(event, [
+        "wss://relay-jp.nostr.wirednet.jp/",
+        "wss://yabu.me/",
+        "wss://r.kojira.io/",
+        "wss://relay-jp.shino3.net/",
+      ]);
     }
   }
 
