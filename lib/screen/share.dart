@@ -1,39 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:receive_sharing_intent/receive_sharing_intent.dart';
-import "dart:async";
+import 'package:nostr_core_dart/nostr.dart';
+import 'package:shriken/class/connection.dart';
+import 'package:shriken/class/encrypt.dart';
 
-class SharePage extends StatefulWidget {
+class PostPage extends StatefulWidget {
+  final String? postText;
+
+  PostPage({this.postText});
+
   @override
-  _SharePageState createState() => _SharePageState();
+  _PostPageState createState() => _PostPageState();
 }
 
-class _SharePageState extends State<SharePage> {
-  final TextEditingController _textController = TextEditingController();
-  StreamSubscription? _intentDataStreamSubscription;
+class _PostPageState extends State<PostPage> {
+  final EncryptManager _encryptManager = EncryptManager();
+  late TextEditingController _textController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // テキスト共有イベントをリスンする
-    _intentDataStreamSubscription = ReceiveSharingIntent.getTextStream().listen(
-      (String value) {
-        setState(() {
-          _textController.text = value;
-        });
-      },
-      onError: (err) {
-        print("共有インテントエラー: $err");
-      },
-    );
-
-    // 初期起動時のインテントをチェックする
-    ReceiveSharingIntent.getInitialText().then((String? value) {
-      if (value != null) {
-        setState(() {
-          _textController.text = value;
-        });
-      }
-    });
+    _textController = TextEditingController(text: widget.postText);
   }
 
   @override
@@ -42,9 +28,14 @@ class _SharePageState extends State<SharePage> {
     super.dispose();
   }
 
-  void _post() {
+  void _post() async {
     // TODO: 投稿処理をここに実装
     print('投稿された内容: ${_textController.text}');
+    String? nsec = await _encryptManager.getItem("nsec");
+    if(nsec != null) {
+      Event event = Nip1.setMetadata(_textController.text, nsec ?? "");
+      Connect.sharedInstance.sendEvent(event);
+    }
   }
 
   @override
@@ -68,7 +59,6 @@ class _SharePageState extends State<SharePage> {
               maxLength: null, // 最大長は制限なし
             ),
             SizedBox(height: 16.0),
-            SizedBox(height: 24.0),
             ElevatedButton(
               onPressed: _post,
               child: Text('Post'),

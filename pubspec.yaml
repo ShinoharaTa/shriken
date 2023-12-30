@@ -38,7 +38,8 @@ dependencies:
   shared_preferences: ^2.2.2
   encrypt: ^5.0.3
   share: ^2.0.4
-  receive_sharing_intent: ^1.4.5
+  flutter_sharing_intent: ^1.1.0
+  nostr_core_dart: ^1.0.1
 
 dev_dependencies:
   flutter_test:
