@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shriken/screen/share.dart';
 import 'package:shriken/screen/convert_hex.dart';
+import 'package:shriken/screen/sats_price.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
 import "screen/config.dart";
@@ -90,6 +91,15 @@ class _MainPageState extends State<Main> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => ConvertToHex()),
+                );
+              },
+            ),
+            ElevatedButton(
+              child: Text('How much sats'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SatsPrice()),
                 );
               },
             ),
