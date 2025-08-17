@@ -1,25 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:shriken/screen/share.dart';
-import 'package:shriken/screen/convert_hex.dart';
-import 'package:shriken/screen/sats_price.dart';
+import 'package:provider/provider.dart';
+import 'package:shriken/screen/post_screen.dart';
+import 'package:shriken/components/app_drawer.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
-import "screen/config.dart";
+import "providers/theme_provider.dart";
+import "theme/elegant_theme.dart";
 import "dart:async";
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Shriken',
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-      ),
-      home: Main(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Shriken',
+          themeMode: themeProvider.themeMode, // 端末設定に従う
+          theme: ElegantTheme.lightElegantTheme,
+          darkTheme: ElegantTheme.darkElegantTheme,
+          home: Main(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }
@@ -31,11 +42,18 @@ class Main extends StatefulWidget {
 
 class _MainPageState extends State<Main> {
   StreamSubscription? _intentDataStreamSubscription;
+  String? _sharedText;
 
   @override
   void initState() {
     super.initState();
     _handleSharedData();
+  }
+
+  @override
+  void dispose() {
+    _intentDataStreamSubscription?.cancel();
+    super.dispose();
   }
 
   void _handleSharedData() {
@@ -44,7 +62,9 @@ class _MainPageState extends State<Main> {
         .getInitialSharing()
         .then((List<SharedFile> value) {
       if (value.isNotEmpty && value.first.value != null) {
-        _navigateToPostPage(value.first.value!);
+        setState(() {
+          _sharedText = value.first.value!;
+        });
       }
     });
 
@@ -53,68 +73,64 @@ class _MainPageState extends State<Main> {
         .getMediaStream()
         .listen((List<SharedFile> value) {
       if (value.isNotEmpty && value.first.value != null) {
-        _navigateToPostPage(value.first.value!);
+        setState(() {
+          _sharedText = value.first.value!;
+        });
       }
     });
   }
 
-  void _navigateToPostPage(String sharedText) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PostPage(postText: sharedText),
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Shriken'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        actions: [
+          // 通知ボタン
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  // 通知はハンバーガーメニューからアクセス
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+              // 未読通知の赤いバッジ
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    '2', // TODO: 実際の未読数を表示
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
+      drawer: AppDrawer(),
+      body: PostScreen(postText: _sharedText), // エレガントな投稿画面を固定
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Supported Nostr Life'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              child: Text('Post to Nostr'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PostPage()),
-                );
-              },
-            ),
-            ElevatedButton(
-              child: Text('Convert To Hex'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ConvertToHex()),
-                );
-              },
-            ),
-            ElevatedButton(
-              child: Text('How much sats'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SatsPrice()),
-                );
-              },
-            ),
-            ElevatedButton(
-              child: Text('Config'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AppConfig()),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 }
